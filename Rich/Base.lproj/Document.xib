@@ -8,7 +8,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="Document" customModule="Rich" customModuleProvider="target">
             <connections>
                 <outlet property="fontFamilyName" destination="bex-fT-Esx" id="3D3-Mf-pVj"/>
-                <outlet property="fontMemberName" destination="YoJ-7b-Cjr" id="jwP-nZ-iae"/>
+                <outlet property="fontMember" destination="YoJ-7b-Cjr" id="uTp-nf-wC4"/>
                 <outlet property="textColorWell" destination="YLp-yo-QAK" id="VlI-So-WVn"/>
                 <outlet property="textView" destination="btg-7X-Rdt" id="Jzp-h3-y9x"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>
@@ -98,6 +98,9 @@
                                                 </items>
                                             </menu>
                                         </popUpButtonCell>
+                                        <connections>
+                                            <action selector="fontFamilyChanged:" target="-2" id="b9Z-xP-DMs"/>
+                                        </connections>
                                     </popUpButton>
                                     <popUpButton verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="YoJ-7b-Cjr">
                                         <rect key="frame" x="76" y="338" width="175" height="26"/>
@@ -112,6 +115,9 @@
                                                 </items>
                                             </menu>
                                         </popUpButtonCell>
+                                        <connections>
+                                            <action selector="fontMemberChanged:" target="-2" id="JLL-4u-hKx"/>
+                                        </connections>
                                     </popUpButton>
                                 </subviews>
                                 <constraints>
