@@ -10,45 +10,69 @@ import Cocoa
 
 class Document: NSDocument {
     
-    var contentString = NSAttributedString(string: "")
-
     @IBOutlet var textView: NSTextView?
     @IBOutlet var textColorWell: NSColorWell?
     @IBOutlet var fontFamilyName: NSPopUpButton?
     @IBOutlet var fontMember: NSPopUpButton?
     @IBOutlet var fontSizeStepper: NSStepper?
     @IBOutlet var fontSizeField: NSTextField?
+    @IBOutlet var textAlignmentSegment: NSSegmentedControl?
     
-    let fontFamilyNames = NSFontManager.sharedFontManager().availableFontFamilies
+    dynamic var contentString = NSAttributedString(string: "")
+    
+    // List of all font family names on the system
+    dynamic let fontFamilyNames = NSFontManager.sharedFontManager().availableFontFamilies
 
+    // Labels for the members menu (e.g. Bold, Oblique) in the current font family
+    // assigned inside textViewDidChangeTypingAttributes
     dynamic var fontMemberLabels: [String] = []
+    // Postscript font names for members in the current font family
+    // These values are needed to actually construct NSFont objects
+    // assigned inside textViewDidChangeTypingAttributes
     dynamic var fontMemberNames: [String] = []
     
+    // Attributes for the textview extracted from the actual typingAttributes
+    // textView.typingAttributes info can't be bound directly since sometimes it's missing.
+    // Looking at you, NSParagraphStyleAttributeName...
     dynamic var currentFontFamilyName: String = ""
     dynamic var currentFontMemberLabel: String = ""
     dynamic var currentFontSize: CGFloat = 0
     dynamic var currentTextColor = NSColor.blackColor()
+    dynamic var currentTextAlignment = NSTextAlignment.Left
 
     override func windowControllerDidLoadNib(aController: NSWindowController) {
         super.windowControllerDidLoadNib(aController)
         
+        // Add a little padding to the text view
+        textView!.textContainerInset = CGSize(width: 20, height: 20)
+        
         let opts: [String: AnyObject] = [
+            // For instances when the font-family or member don't exist on the system
             NSNullPlaceholderBindingOption: "----",
         ]
         
-        textView?.bind("attributedString", toObject: self, withKeyPath: "contentString", options: nil)
-        textView?.textContainerInset = CGSize(width: 20, height: 20)
+        // I like doing bindings here instead of IB, since it's easier to see
         
-        textColorWell?.bind("value", toObject: self, withKeyPath: "currentTextColor", options: nil)
+        // text view
+        textView!.bind("attributedString", toObject: self, withKeyPath: "contentString", options: nil)
+    
+        // color well
+        textColorWell!.bind("value", toObject: self, withKeyPath: "currentTextColor", options: nil)
         
-        fontFamilyName?.bind("content", toObject: self, withKeyPath: "fontFamilyNames", options: opts)
-        fontFamilyName?.bind("selectedValue", toObject: self, withKeyPath: "currentFontFamilyName", options: nil)
+        // font family
+        fontFamilyName!.bind("content", toObject: self, withKeyPath: "fontFamilyNames", options: opts)
+        fontFamilyName!.bind("selectedValue", toObject: self, withKeyPath: "currentFontFamilyName", options: nil)
 
-        fontMember?.bind("content", toObject: self, withKeyPath: "fontMemberLabels", options: opts)
-        fontMember?.bind("selectedValue", toObject: self, withKeyPath: "currentFontMemberLabel", options: nil)
+        // font member
+        fontMember!.bind("content", toObject: self, withKeyPath: "fontMemberLabels", options: opts)
+        fontMember!.bind("selectedValue", toObject: self, withKeyPath: "currentFontMemberLabel", options: nil)
         
-        fontSizeField?.bind("value", toObject: self, withKeyPath: "currentFontSize", options: opts)
-        fontSizeStepper?.bind("value", toObject: self, withKeyPath: "currentFontSize", options: nil)
+        // size
+        fontSizeField!.bind("value", toObject: self, withKeyPath: "currentFontSize", options: opts)
+        fontSizeStepper!.bind("value", toObject: self, withKeyPath: "currentFontSize", options: nil)
+        
+        // alignment
+        textAlignmentSegment!.bind("selectedTag", toObject: self, withKeyPath: "currentTextAlignment", options: nil)
     }
 
     override class func autosavesInPlace() -> Bool {
@@ -58,6 +82,8 @@ class Document: NSDocument {
     override var windowNibName: String? {
         return "Document"
     }
+    
+    // MARK: Read/Write methods
     
     override func dataOfType(typeName: String) throws -> NSData {
         let range = NSRange(location: 0, length: contentString.length)
@@ -82,6 +108,8 @@ class Document: NSDocument {
         }
     }
     
+    // MARK: Font management
+    
     @IBAction func fontMemberChanged(sender: NSPopUpButton) {
         let newIDX = fontMember!.indexOfSelectedItem
         if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
@@ -99,6 +127,7 @@ class Document: NSDocument {
     
     @IBAction func fontSizeChanged(sender: NSControl) {
         var newSize = CGFloat(sender.floatValue)
+        // No negative sizes fonts, pleez
         if newSize < 0.0 {
             newSize *= -1.0
         }
@@ -111,11 +140,14 @@ class Document: NSDocument {
         }
     }
     
+    // Takes a font and applies it to text ranges
     func applyFontToTypingAttributes(font: NSFont) {
         if let changeRanges = textView?.rangesForUserCharacterAttributeChange {
+            
+            // Important to wrap batch changes to textStorage in shouldChangeTextInRanges/beginEditing ... endEditing/didChangeText
             textView?.shouldChangeTextInRanges(changeRanges, replacementStrings: nil)
             textView?.textStorage?.beginEditing()
-            
+            // Loop over the range values and add the new font as an attribute
             for (_, value) in changeRanges.enumerate() {
                 textView?.textStorage?.addAttributes([NSFontAttributeName: font], range: value.rangeValue)
             }
@@ -123,9 +155,61 @@ class Document: NSDocument {
             textView?.didChangeText()
         }
         
-        if var prevTypingAttributes = textView?.typingAttributes {
-            prevTypingAttributes[NSFontAttributeName] = font
-            textView?.typingAttributes = prevTypingAttributes
+        // Apply the new font to the typing attributes
+        if var typingAttributes = textView?.typingAttributes {
+            typingAttributes[NSFontAttributeName] = font
+            textView?.typingAttributes = typingAttributes
+        }
+    }
+    
+    // MARK: Alignment management
+    
+    @IBAction func paragraphAlignmentChanged(sender: NSSegmentedControl) {
+        
+        // A fun cocktail of swift casting goofiness
+        var alignment = NSTextAlignment.Left
+        let selectedTag = (sender.cell as! NSSegmentedCell).tagForSegment(sender.selectedSegment)
+        if let a = NSTextAlignment(rawValue: UInt(bitPattern: selectedTag)) {
+            alignment = a
+        }
+        
+        if let changeRanges = textView?.rangesForUserParagraphAttributeChange {
+            // Important to wrap batch changes to textStorage in shouldChangeTextInRanges/beginEditing ... endEditing/didChangeText
+            textView?.shouldChangeTextInRanges(changeRanges, replacementStrings: nil)
+            textView?.textStorage?.beginEditing()
+            // Loop over the range values, and apply new paragraph style for each
+            for (_, value) in changeRanges.enumerate() {
+                
+                // Watch out for ranges like (558,0) when the cursor is at the end of the string
+                if value.rangeValue.length == 0 {
+                    continue
+                }
+                
+                // Build a default paragraph style
+                var paragraphStyle = NSMutableParagraphStyle()
+                
+                // Attempt to pull a current paragraph style for the range
+                if let existingPStyle = textView?.textStorage?.attribute(NSParagraphStyleAttributeName, atIndex: value.rangeValue.location, longestEffectiveRange: nil, inRange: value.rangeValue)?.mutableCopy() as? NSMutableParagraphStyle {
+                    paragraphStyle = existingPStyle
+                }
+                
+                // Assign the alignment, and add it
+                paragraphStyle.alignment = alignment
+                textView?.textStorage?.addAttribute(NSParagraphStyleAttributeName, value: paragraphStyle, range: value.rangeValue)
+            }
+            textView?.textStorage?.endEditing()
+            textView?.didChangeText()
+            
+            // Apply the new alignment to the typing attributes
+            if var typingAttributes = textView?.typingAttributes {
+                var paragraphStyle = NSMutableParagraphStyle()
+                if let existingPStyle = typingAttributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
+                    paragraphStyle = existingPStyle.mutableCopy() as! NSMutableParagraphStyle
+                }
+                paragraphStyle.alignment = alignment
+                typingAttributes[NSParagraphStyleAttributeName] = paragraphStyle
+                textView?.typingAttributes = typingAttributes
+            }
         }
     }
 }
@@ -138,6 +222,12 @@ extension Document: NSTextViewDelegate {
             currentTextColor = color
         } else {
             currentTextColor = NSColor.blackColor()
+        }
+        
+        if let pStyle = textView?.typingAttributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
+            currentTextAlignment = pStyle.alignment
+        } else {
+            currentTextAlignment = .Left
         }
         
         if let font = textView?.typingAttributes[NSFontAttributeName] as? NSFont {

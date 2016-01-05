@@ -11,6 +11,7 @@
                 <outlet property="fontMember" destination="YoJ-7b-Cjr" id="uTp-nf-wC4"/>
                 <outlet property="fontSizeField" destination="hWL-SA-inm" id="aQF-IY-Xjd"/>
                 <outlet property="fontSizeStepper" destination="zUP-lL-Igs" id="mre-oe-PSC"/>
+                <outlet property="textAlignmentSegment" destination="9sq-i1-F3L" id="PA0-LK-zne"/>
                 <outlet property="textColorWell" destination="YLp-yo-QAK" id="VlI-So-WVn"/>
                 <outlet property="textView" destination="btg-7X-Rdt" id="Jzp-h3-y9x"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>
@@ -26,7 +27,7 @@
             <value key="minSize" type="size" width="94" height="86"/>
             <view key="contentView" id="gIp-Ho-8D9">
                 <rect key="frame" x="0.0" y="0.0" width="541" height="413"/>
-                <autoresizingMask key="autoresizingMask"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <splitView arrangesAllSubviews="NO" dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="y12-Me-SJm">
                         <rect key="frame" x="0.0" y="0.0" width="541" height="413"/>
@@ -146,6 +147,25 @@
                                             <action selector="fontSizeChanged:" target="-2" id="KIq-m2-6Ks"/>
                                         </connections>
                                     </stepper>
+                                    <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="9sq-i1-F3L">
+                                        <rect key="frame" x="76" y="278" width="177" height="24"/>
+                                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="FV9-PE-ca4">
+                                            <font key="font" metaFont="system"/>
+                                            <segments>
+                                                <segment image="text_align_left_Template" width="42" selected="YES"/>
+                                                <segment image="text_align_center_Template" width="42" tag="2"/>
+                                                <segment toolTip="Align right" image="text_align_right_Template" width="42" tag="1">
+                                                    <nil key="label"/>
+                                                </segment>
+                                                <segment image="text_align_justify_Template" width="42" tag="3">
+                                                    <nil key="label"/>
+                                                </segment>
+                                            </segments>
+                                        </segmentedCell>
+                                        <connections>
+                                            <action selector="paragraphAlignmentChanged:" target="-2" id="uZU-N9-KQU"/>
+                                        </connections>
+                                    </segmentedControl>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="zUP-lL-Igs" firstAttribute="leading" secondItem="hWL-SA-inm" secondAttribute="trailing" constant="4" id="7sx-k4-SD6"/>
@@ -154,6 +174,7 @@
                                     <constraint firstItem="YLp-yo-QAK" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="20" id="Nc1-NV-kKS"/>
                                     <constraint firstItem="bex-fT-Esx" firstAttribute="top" secondItem="h7E-GJ-nrO" secondAttribute="top" constant="20" id="PR3-gA-Z0X"/>
                                     <constraint firstItem="YLp-yo-QAK" firstAttribute="top" secondItem="h7E-GJ-nrO" secondAttribute="top" constant="20" id="TCl-2z-nuA"/>
+                                    <constraint firstItem="9sq-i1-F3L" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="78" id="YPd-iF-xjf"/>
                                     <constraint firstAttribute="trailing" secondItem="bex-fT-Esx" secondAttribute="trailing" constant="20" id="Yfo-vH-6qX"/>
                                     <constraint firstAttribute="trailing" secondItem="YoJ-7b-Cjr" secondAttribute="trailing" constant="20" id="bQQ-9H-eBt"/>
                                     <constraint firstItem="hWL-SA-inm" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="78" id="hco-RN-aOG"/>
@@ -161,6 +182,7 @@
                                     <constraint firstItem="zUP-lL-Igs" firstAttribute="top" secondItem="YoJ-7b-Cjr" secondAttribute="bottom" constant="10" id="pfR-Vf-yTu"/>
                                     <constraint firstItem="hWL-SA-inm" firstAttribute="top" secondItem="YoJ-7b-Cjr" secondAttribute="bottom" constant="10" id="qWX-37-80v"/>
                                     <constraint firstItem="bex-fT-Esx" firstAttribute="leading" secondItem="YLp-yo-QAK" secondAttribute="trailing" constant="8" id="tAY-1x-bfZ"/>
+                                    <constraint firstItem="9sq-i1-F3L" firstAttribute="top" secondItem="zUP-lL-Igs" secondAttribute="bottom" constant="8" id="vsO-J6-0Gi"/>
                                     <constraint firstItem="YoJ-7b-Cjr" firstAttribute="leading" secondItem="YLp-yo-QAK" secondAttribute="trailing" constant="8" id="x8g-9Z-4gj"/>
                                     <constraint firstItem="YoJ-7b-Cjr" firstAttribute="top" secondItem="bex-fT-Esx" secondAttribute="bottom" constant="10" id="z6V-fV-lLH"/>
                                 </constraints>
@@ -184,6 +206,11 @@
             </connections>
             <point key="canvasLocation" x="571.5" y="252.5"/>
         </window>
-        <userDefaultsController representsSharedInstance="YES" id="pE7-w1-j5f"/>
     </objects>
+    <resources>
+        <image name="text_align_center_Template" width="14" height="10"/>
+        <image name="text_align_justify_Template" width="14" height="10"/>
+        <image name="text_align_left_Template" width="14" height="10"/>
+        <image name="text_align_right_Template" width="14" height="10"/>
+    </resources>
 </document>
