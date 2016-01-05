@@ -11,31 +11,44 @@ import Cocoa
 class Document: NSDocument {
     
     var contentString = NSAttributedString(string: "")
-    @IBOutlet var textView: RichTextView?
+
+    @IBOutlet var textView: NSTextView?
     @IBOutlet var textColorWell: NSColorWell?
     @IBOutlet var fontFamilyName: NSPopUpButton?
     @IBOutlet var fontMember: NSPopUpButton?
+    @IBOutlet var fontSizeStepper: NSStepper?
+    @IBOutlet var fontSizeField: NSTextField?
     
     let fontFamilyNames = NSFontManager.sharedFontManager().availableFontFamilies
+
+    dynamic var fontMemberLabels: [String] = []
+    dynamic var fontMemberNames: [String] = []
     
-    override init() {
-        super.init()
-    }
+    dynamic var currentFontFamilyName: String = ""
+    dynamic var currentFontMemberLabel: String = ""
+    dynamic var currentFontSize: CGFloat = 0
+    dynamic var currentTextColor = NSColor.blackColor()
 
     override func windowControllerDidLoadNib(aController: NSWindowController) {
         super.windowControllerDidLoadNib(aController)
-      
+        
         let opts: [String: AnyObject] = [
-            NSNullPlaceholderBindingOption: "-----",
+            NSNullPlaceholderBindingOption: "----",
         ]
         
-        textColorWell?.bind("value", toObject: textView!, withKeyPath: "typingAttributes.\(NSForegroundColorAttributeName)", options: nil)
+        textView?.bind("attributedString", toObject: self, withKeyPath: "contentString", options: nil)
+        textView?.textContainerInset = CGSize(width: 20, height: 20)
+        
+        textColorWell?.bind("value", toObject: self, withKeyPath: "currentTextColor", options: nil)
         
         fontFamilyName?.bind("content", toObject: self, withKeyPath: "fontFamilyNames", options: opts)
-        fontFamilyName?.bind("selectedValue", toObject: textView!, withKeyPath: "currentFontFamilyName", options: nil)
+        fontFamilyName?.bind("selectedValue", toObject: self, withKeyPath: "currentFontFamilyName", options: nil)
 
-        fontMember?.bind("content", toObject: textView!, withKeyPath: "fontMemberLabels", options: opts)
-        fontMember?.bind("selectedValue", toObject: textView!, withKeyPath: "currentFontMemberLabel", options: nil)
+        fontMember?.bind("content", toObject: self, withKeyPath: "fontMemberLabels", options: opts)
+        fontMember?.bind("selectedValue", toObject: self, withKeyPath: "currentFontMemberLabel", options: nil)
+        
+        fontSizeField?.bind("value", toObject: self, withKeyPath: "currentFontSize", options: opts)
+        fontSizeStepper?.bind("value", toObject: self, withKeyPath: "currentFontSize", options: nil)
     }
 
     override class func autosavesInPlace() -> Bool {
@@ -63,21 +76,7 @@ class Document: NSDocument {
         let newIDX = fontFamilyName!.indexOfSelectedItem
         if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
             let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toFamily: fontFamilyNames[newIDX])
-            if let changeRanges = textView?.rangesForUserCharacterAttributeChange {
-                textView?.shouldChangeTextInRanges(changeRanges, replacementStrings: nil)
-                textView?.textStorage?.beginEditing()
-                
-                for (_, value) in changeRanges.enumerate() {
-                    textView?.textStorage?.addAttributes([NSFontAttributeName: newFont], range: value.rangeValue)
-                }
-                textView?.textStorage?.endEditing()
-                textView?.didChangeText()
-            }
-            
-            if var prevTypingAttributes = textView?.typingAttributes {
-                prevTypingAttributes[NSFontAttributeName] = newFont
-                textView?.typingAttributes = prevTypingAttributes
-            }
+            applyFontToTypingAttributes(newFont)
         } else {
             // no current font
         }
@@ -86,24 +85,10 @@ class Document: NSDocument {
     @IBAction func fontMemberChanged(sender: NSPopUpButton) {
         let newIDX = fontMember!.indexOfSelectedItem
         if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
-            let newMemberName = textView!.fontMemberNames[newIDX]
+            let newMemberName = fontMemberNames[newIDX]
             
             if let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toFace: newMemberName) {
-                if let changeRanges = textView?.rangesForUserCharacterAttributeChange {
-                    textView?.shouldChangeTextInRanges(changeRanges, replacementStrings: nil)
-                    textView?.textStorage?.beginEditing()
-                    
-                    for (_, value) in changeRanges.enumerate() {
-                        textView?.textStorage?.addAttributes([NSFontAttributeName: newFont], range: value.rangeValue)
-                    }
-                    textView?.textStorage?.endEditing()
-                    textView?.didChangeText()
-                }
-                
-                if var prevTypingAttributes = textView?.typingAttributes {
-                    prevTypingAttributes[NSFontAttributeName] = newFont
-                    textView?.typingAttributes = prevTypingAttributes
-                }
+                applyFontToTypingAttributes(newFont)
             } else {
                 debugPrint("no new font")
             }
@@ -111,38 +96,65 @@ class Document: NSDocument {
             debugPrint("no current font")
         }
     }
+    
+    @IBAction func fontSizeChanged(sender: NSControl) {
+        var newSize = CGFloat(sender.floatValue)
+        if newSize < 0.0 {
+            newSize *= -1.0
+        }
+        
+        if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
+            let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toSize: newSize)
+            applyFontToTypingAttributes(newFont)
+        } else {
+            debugPrint("no current font")
+        }
+    }
+    
+    func applyFontToTypingAttributes(font: NSFont) {
+        if let changeRanges = textView?.rangesForUserCharacterAttributeChange {
+            textView?.shouldChangeTextInRanges(changeRanges, replacementStrings: nil)
+            textView?.textStorage?.beginEditing()
+            
+            for (_, value) in changeRanges.enumerate() {
+                textView?.textStorage?.addAttributes([NSFontAttributeName: font], range: value.rangeValue)
+            }
+            textView?.textStorage?.endEditing()
+            textView?.didChangeText()
+        }
+        
+        if var prevTypingAttributes = textView?.typingAttributes {
+            prevTypingAttributes[NSFontAttributeName] = font
+            textView?.typingAttributes = prevTypingAttributes
+        }
+    }
 }
 
-class RichTextView: NSTextView {
+extension Document: NSTextViewDelegate {
     
-    dynamic var fontMemberLabels: [String] = []
-    dynamic var fontMemberNames: [String] = []
-    
-    dynamic var currentFontFamilyName: String = ""
-    dynamic var currentFontMemberLabel: String = ""
+    func textViewDidChangeTypingAttributes(notification: NSNotification) {
 
-    override func didChangeValueForKey(key: String) {
-
-        super.didChangeValueForKey(key)
-        if key == "typingAttributes" {
-            if let font = typingAttributes[NSFontAttributeName] as? NSFont {
-                currentFontFamilyName = font.familyName!
-                if let members = NSFontManager.sharedFontManager().availableMembersOfFontFamily(currentFontFamilyName) {
-                    // e.g [[Helvetica, Regular, 5, 0], [Helvetica-Light, Light, 3, 0], [Helvetica-Oblique, Oblique, 5, 1], [Helvetica-LightOblique, Light Oblique, 3, 1], [Helvetica-Bold, Bold, 9, 2], [Helvetica-BoldOblique, Bold Oblique, 9, 3]]
-                    // https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSFontManager_Class/#//apple_ref/occ/instm/NSFontManager/availableMembersOfFontFamily:
-                    fontMemberNames = members.map({member in (member[0] as! String)})
-                    fontMemberLabels = members.map({member in (member[1] as! String)})
-                    if let matchedMember = members.filter({ member in
-                        if let memberFontName = member[0] as? String {
-                            return memberFontName == font.fontName
-                        }
-                        return false
-                    }).first {
-                        currentFontMemberLabel = matchedMember[1] as! String
-                    } else {
-                        // TODO handle missing font
+        if let color = textView?.typingAttributes[NSForegroundColorAttributeName] as? NSColor {
+            currentTextColor = color
+        } else {
+            currentTextColor = NSColor.blackColor()
+        }
+        
+        if let font = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
+            currentFontFamilyName = font.familyName!
+            currentFontSize = font.pointSize
+            if let members = NSFontManager.sharedFontManager().availableMembersOfFontFamily(currentFontFamilyName) {
+                // e.g [[Helvetica, Regular, 5, 0], [Helvetica-Light, Light, 3, 0], [Helvetica-Oblique, Oblique, 5, 1], [Helvetica-LightOblique, Light Oblique, 3, 1], [Helvetica-Bold, Bold, 9, 2], [Helvetica-BoldOblique, Bold Oblique, 9, 3]]
+                // https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSFontManager_Class/#//apple_ref/occ/instm/NSFontManager/availableMembersOfFontFamily:
+                fontMemberNames = members.map({member in (member[0] as! String)})
+                fontMemberLabels = members.map({member in (member[1] as! String)})
+                if let matchedMember = members.filter({ member in
+                    if let memberFontName = member[0] as? String {
+                        return memberFontName == font.fontName
                     }
-                    
+                    return false
+                }).first {
+                    currentFontMemberLabel = matchedMember[1] as! String
                 } else {
                     // TODO handle missing font
                 }
@@ -150,6 +162,9 @@ class RichTextView: NSTextView {
             } else {
                 // TODO handle missing font
             }
+            
+        } else {
+            // TODO handle missing font
         }
     }
 }

@@ -9,6 +9,8 @@
             <connections>
                 <outlet property="fontFamilyName" destination="bex-fT-Esx" id="3D3-Mf-pVj"/>
                 <outlet property="fontMember" destination="YoJ-7b-Cjr" id="uTp-nf-wC4"/>
+                <outlet property="fontSizeField" destination="hWL-SA-inm" id="aQF-IY-Xjd"/>
+                <outlet property="fontSizeStepper" destination="zUP-lL-Igs" id="mre-oe-PSC"/>
                 <outlet property="textColorWell" destination="YLp-yo-QAK" id="VlI-So-WVn"/>
                 <outlet property="textView" destination="btg-7X-Rdt" id="Jzp-h3-y9x"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>
@@ -39,7 +41,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="272" height="413"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
-                                                <textView importsGraphics="NO" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" spellingCorrection="YES" smartInsertDelete="YES" id="btg-7X-Rdt" customClass="RichTextView" customModule="Rich" customModuleProvider="target">
+                                                <textView importsGraphics="NO" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" spellingCorrection="YES" smartInsertDelete="YES" id="btg-7X-Rdt">
                                                     <rect key="frame" x="0.0" y="0.0" width="272" height="413"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -49,7 +51,7 @@
                                                     <size key="minSize" width="272" height="413"/>
                                                     <size key="maxSize" width="463" height="10000000"/>
                                                     <connections>
-                                                        <binding destination="-2" name="attributedString" keyPath="self.contentString" id="rjL-Is-tjf"/>
+                                                        <outlet property="delegate" destination="-2" id="NH0-I1-GGA"/>
                                                     </connections>
                                                 </textView>
                                             </subviews>
@@ -100,6 +102,7 @@
                                         </popUpButtonCell>
                                         <connections>
                                             <action selector="fontFamilyChanged:" target="-2" id="b9Z-xP-DMs"/>
+                                            <outlet property="nextKeyView" destination="YoJ-7b-Cjr" id="Ym7-50-RzU"/>
                                         </connections>
                                     </popUpButton>
                                     <popUpButton verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="YoJ-7b-Cjr">
@@ -117,17 +120,46 @@
                                         </popUpButtonCell>
                                         <connections>
                                             <action selector="fontMemberChanged:" target="-2" id="JLL-4u-hKx"/>
+                                            <outlet property="nextKeyView" destination="hWL-SA-inm" id="a9i-fW-X5h"/>
                                         </connections>
                                     </popUpButton>
+                                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hWL-SA-inm" userLabel="Font Size Field">
+                                        <rect key="frame" x="78" y="309" width="40" height="22"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="40" id="nJ0-UW-nyU"/>
+                                        </constraints>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="12" drawsBackground="YES" id="RPi-AL-Vlc">
+                                            <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="4Df-2i-Xio"/>
+                                            <font key="font" metaFont="system"/>
+                                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                        <connections>
+                                            <action selector="fontSizeChanged:" target="-2" id="x6L-0r-4qN"/>
+                                            <outlet property="nextKeyView" destination="zUP-lL-Igs" id="g5I-lz-80s"/>
+                                        </connections>
+                                    </textField>
+                                    <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="zUP-lL-Igs" userLabel="Font Size Stepper">
+                                        <rect key="frame" x="119" y="306" width="19" height="27"/>
+                                        <stepperCell key="cell" continuous="YES" alignment="left" minValue="1" maxValue="1000" doubleValue="12" id="xAB-c4-YDb"/>
+                                        <connections>
+                                            <action selector="fontSizeChanged:" target="-2" id="KIq-m2-6Ks"/>
+                                        </connections>
+                                    </stepper>
                                 </subviews>
                                 <constraints>
+                                    <constraint firstItem="zUP-lL-Igs" firstAttribute="leading" secondItem="hWL-SA-inm" secondAttribute="trailing" constant="4" id="7sx-k4-SD6"/>
                                     <constraint firstAttribute="width" relation="lessThanOrEqual" constant="400" id="9Ke-bX-3cd"/>
+                                    <constraint firstItem="zUP-lL-Igs" firstAttribute="leading" secondItem="hWL-SA-inm" secondAttribute="trailing" constant="4" id="KFi-WQ-4Er"/>
                                     <constraint firstItem="YLp-yo-QAK" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="20" id="Nc1-NV-kKS"/>
                                     <constraint firstItem="bex-fT-Esx" firstAttribute="top" secondItem="h7E-GJ-nrO" secondAttribute="top" constant="20" id="PR3-gA-Z0X"/>
                                     <constraint firstItem="YLp-yo-QAK" firstAttribute="top" secondItem="h7E-GJ-nrO" secondAttribute="top" constant="20" id="TCl-2z-nuA"/>
                                     <constraint firstAttribute="trailing" secondItem="bex-fT-Esx" secondAttribute="trailing" constant="20" id="Yfo-vH-6qX"/>
                                     <constraint firstAttribute="trailing" secondItem="YoJ-7b-Cjr" secondAttribute="trailing" constant="20" id="bQQ-9H-eBt"/>
+                                    <constraint firstItem="hWL-SA-inm" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="78" id="hco-RN-aOG"/>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="270" id="jfE-HH-9Ap"/>
+                                    <constraint firstItem="zUP-lL-Igs" firstAttribute="top" secondItem="YoJ-7b-Cjr" secondAttribute="bottom" constant="10" id="pfR-Vf-yTu"/>
+                                    <constraint firstItem="hWL-SA-inm" firstAttribute="top" secondItem="YoJ-7b-Cjr" secondAttribute="bottom" constant="10" id="qWX-37-80v"/>
                                     <constraint firstItem="bex-fT-Esx" firstAttribute="leading" secondItem="YLp-yo-QAK" secondAttribute="trailing" constant="8" id="tAY-1x-bfZ"/>
                                     <constraint firstItem="YoJ-7b-Cjr" firstAttribute="leading" secondItem="YLp-yo-QAK" secondAttribute="trailing" constant="8" id="x8g-9Z-4gj"/>
                                     <constraint firstItem="YoJ-7b-Cjr" firstAttribute="top" secondItem="bex-fT-Esx" secondAttribute="bottom" constant="10" id="z6V-fV-lLH"/>
