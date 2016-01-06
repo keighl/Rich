@@ -8,6 +8,12 @@
 
 import Cocoa
 
+enum TextDecoration: Int {
+    case Bold
+    case Italic
+    case Underline
+}
+
 class Document: NSDocument {
     
     @IBOutlet var textView: NSTextView?
@@ -17,6 +23,7 @@ class Document: NSDocument {
     @IBOutlet var fontSizeStepper: NSStepper?
     @IBOutlet var fontSizeField: NSTextField?
     @IBOutlet var textAlignmentSegment: NSSegmentedControl?
+    @IBOutlet var textDecorationSegment: NSSegmentedControl?
     
     dynamic var contentString = NSAttributedString(string: "")
     
@@ -34,11 +41,29 @@ class Document: NSDocument {
     // Attributes for the textview extracted from the actual typingAttributes
     // textView.typingAttributes info can't be bound directly since sometimes it's missing.
     // Looking at you, NSParagraphStyleAttributeName...
-    dynamic var currentFontFamilyName: String = ""
-    dynamic var currentFontMemberLabel: String = ""
+    dynamic var currentFontFamilyName: String? = ""
+    dynamic var currentFontMemberLabel: String? = ""
     dynamic var currentFontSize: CGFloat = 0
     dynamic var currentTextColor = NSColor.blackColor()
     dynamic var currentTextAlignment = NSTextAlignment.Left
+    
+    // Multiple selection in NSSegmentControl is easier to manage using didSet
+    // as opppised to binding
+    dynamic var currentTextIsBold = false {
+        didSet {
+            self.textDecorationSegment?.setSelected(currentTextIsBold, forSegment: TextDecoration.Bold.rawValue)
+        }
+    }
+    dynamic var currentTextIsItalic = false {
+        didSet {
+            self.textDecorationSegment?.setSelected(currentTextIsItalic, forSegment: TextDecoration.Italic.rawValue)
+        }
+    }
+    dynamic var currentTextIsUnderline = false {
+        didSet {
+            self.textDecorationSegment?.setSelected(currentTextIsUnderline, forSegment: TextDecoration.Underline.rawValue)
+        }
+    }
 
     override func windowControllerDidLoadNib(aController: NSWindowController) {
         super.windowControllerDidLoadNib(aController)
@@ -102,7 +127,7 @@ class Document: NSDocument {
         let newIDX = fontFamilyName!.indexOfSelectedItem
         if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
             let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toFamily: fontFamilyNames[newIDX])
-            applyFontToTypingAttributes(newFont)
+            applyNewAttributes([NSFontAttributeName: newFont])
         } else {
             // no current font
         }
@@ -116,12 +141,12 @@ class Document: NSDocument {
             let newMemberName = fontMemberNames[newIDX]
             
             if let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toFace: newMemberName) {
-                applyFontToTypingAttributes(newFont)
+                applyNewAttributes([NSFontAttributeName: newFont])
             } else {
-                debugPrint("no new font")
+                // TODO
             }
         } else {
-            debugPrint("no current font")
+            // TODO
         }
     }
     
@@ -134,31 +159,9 @@ class Document: NSDocument {
         
         if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
             let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toSize: newSize)
-            applyFontToTypingAttributes(newFont)
+            applyNewAttributes([NSFontAttributeName: newFont])
         } else {
-            debugPrint("no current font")
-        }
-    }
-    
-    // Takes a font and applies it to text ranges
-    func applyFontToTypingAttributes(font: NSFont) {
-        if let changeRanges = textView?.rangesForUserCharacterAttributeChange {
-            
-            // Important to wrap batch changes to textStorage in shouldChangeTextInRanges/beginEditing ... endEditing/didChangeText
-            textView?.shouldChangeTextInRanges(changeRanges, replacementStrings: nil)
-            textView?.textStorage?.beginEditing()
-            // Loop over the range values and add the new font as an attribute
-            for (_, value) in changeRanges.enumerate() {
-                textView?.textStorage?.addAttributes([NSFontAttributeName: font], range: value.rangeValue)
-            }
-            textView?.textStorage?.endEditing()
-            textView?.didChangeText()
-        }
-        
-        // Apply the new font to the typing attributes
-        if var typingAttributes = textView?.typingAttributes {
-            typingAttributes[NSFontAttributeName] = font
-            textView?.typingAttributes = typingAttributes
+            // TODO
         }
     }
     
@@ -167,6 +170,7 @@ class Document: NSDocument {
     @IBAction func paragraphAlignmentChanged(sender: NSSegmentedControl) {
         
         // A fun cocktail of swift casting goofiness
+        // Alignment value is stored in cell tag
         var alignment = NSTextAlignment.Left
         let selectedTag = (sender.cell as! NSSegmentedCell).tagForSegment(sender.selectedSegment)
         if let a = NSTextAlignment(rawValue: UInt(bitPattern: selectedTag)) {
@@ -212,28 +216,111 @@ class Document: NSDocument {
             }
         }
     }
+    
+    // MARK: Decoration management
+    
+    @IBAction func decorationChanged(sender: NSSegmentedControl) {
+        // `selectedSegment` is the last segment the user interacted with
+        // regardless of whether it was enabled/disable... confusing!
+        
+        var decoration = TextDecoration.Underline
+        if let d = TextDecoration(rawValue: sender.selectedSegment) {
+            decoration = d
+        }
+        
+        let enabled = sender.isSelectedForSegment(sender.selectedSegment)
+
+        // Grab the typing font
+        if var font = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
+            if decoration == .Bold {
+                if enabled {
+                    font = NSFontManager.sharedFontManager().convertFont(font, toHaveTrait: .BoldFontMask)
+                } else {
+                    font = NSFontManager.sharedFontManager().convertFont(font, toNotHaveTrait: .BoldFontMask)
+                }
+                applyNewAttributes([NSFontAttributeName: font])
+            }
+            
+            if decoration == .Italic {
+                if enabled {
+                    font = NSFontManager.sharedFontManager().convertFont(font, toHaveTrait: .ItalicFontMask)
+                } else {
+                    font = NSFontManager.sharedFontManager().convertFont(font, toNotHaveTrait: .ItalicFontMask)
+                }
+                applyNewAttributes([NSFontAttributeName: font])
+            }
+            
+            if decoration == .Underline {
+                if enabled {
+                    applyNewAttributes([NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleSingle.rawValue])
+                } else {
+                    applyNewAttributes([NSUnderlineStyleAttributeName: NSUnderlineStyle.StyleNone.rawValue])
+                }
+            }
+            
+        } else {
+            // TODO
+        }
+    }
+    
+    // Takes new attributes and applies it to rangesForUserCharacterAttributeChange, and updates typing attributes
+    func applyNewAttributes(attributes: [String: AnyObject]) {
+        if let changeRanges = textView?.rangesForUserCharacterAttributeChange {
+            
+            // Important to wrap batch changes to textStorage in shouldChangeTextInRanges/beginEditing ... endEditing/didChangeText
+            textView?.shouldChangeTextInRanges(changeRanges, replacementStrings: nil)
+            textView?.textStorage?.beginEditing()
+            // Loop over the range values and add the new font as an attribute
+            for (_, value) in changeRanges.enumerate() {
+                textView?.textStorage?.addAttributes(attributes, range: value.rangeValue)
+            }
+            textView?.textStorage?.endEditing()
+            textView?.didChangeText()
+        }
+        
+        // Apply the new font to the typing attributes
+        if var typingAttributes = textView?.typingAttributes {
+            typingAttributes.updateWithDictionary(attributes)
+            textView?.typingAttributes = typingAttributes
+        }
+    }
 }
 
 extension Document: NSTextViewDelegate {
     
     func textViewDidChangeTypingAttributes(notification: NSNotification) {
 
+        // Sniff the typing color
         if let color = textView?.typingAttributes[NSForegroundColorAttributeName] as? NSColor {
             currentTextColor = color
         } else {
             currentTextColor = NSColor.blackColor()
         }
         
+        // Sniff the typing alignment
         if let pStyle = textView?.typingAttributes[NSParagraphStyleAttributeName] as? NSParagraphStyle {
             currentTextAlignment = pStyle.alignment
         } else {
             currentTextAlignment = .Left
         }
         
+        // Sniff the typing underline style
+        if let underlineStyle = textView?.typingAttributes[NSUnderlineStyleAttributeName] as? Int {
+            debugPrint("currentTextIsUnderline", underlineStyle, NSUnderlineStyle.StyleSingle.rawValue)
+            currentTextIsUnderline = (underlineStyle == NSUnderlineStyle.StyleSingle.rawValue)
+        } else {
+            currentTextIsUnderline = false
+        }
+        
         if let font = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
-            currentFontFamilyName = font.familyName!
+            currentFontFamilyName = font.familyName
             currentFontSize = font.pointSize
-            if let members = NSFontManager.sharedFontManager().availableMembersOfFontFamily(currentFontFamilyName) {
+            currentTextIsBold = NSFontManager.sharedFontManager().fontNamed(font.fontName, hasTraits: .BoldFontMask)
+            currentTextIsItalic = NSFontManager.sharedFontManager().fontNamed(font.fontName, hasTraits: .ItalicFontMask)
+            if currentFontFamilyName == nil {
+                return
+            }
+            if let members = NSFontManager.sharedFontManager().availableMembersOfFontFamily(currentFontFamilyName!) {
                 // e.g [[Helvetica, Regular, 5, 0], [Helvetica-Light, Light, 3, 0], [Helvetica-Oblique, Oblique, 5, 1], [Helvetica-LightOblique, Light Oblique, 3, 1], [Helvetica-Bold, Bold, 9, 2], [Helvetica-BoldOblique, Bold Oblique, 9, 3]]
                 // https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSFontManager_Class/#//apple_ref/occ/instm/NSFontManager/availableMembersOfFontFamily:
                 fontMemberNames = members.map({member in (member[0] as! String)})
@@ -244,7 +331,7 @@ extension Document: NSTextViewDelegate {
                     }
                     return false
                 }).first {
-                    currentFontMemberLabel = matchedMember[1] as! String
+                    currentFontMemberLabel = matchedMember[1] as? String
                 } else {
                     // TODO handle missing font
                 }
@@ -252,9 +339,18 @@ extension Document: NSTextViewDelegate {
             } else {
                 // TODO handle missing font
             }
-            
         } else {
+            currentTextIsBold = false
+            currentTextIsItalic = false
             // TODO handle missing font
+        }
+    }
+}
+
+extension Dictionary {
+    mutating func updateWithDictionary(dictionary: Dictionary) {
+        for (key, value) in dictionary {
+            self.updateValue(value, forKey:key)
         }
     }
 }

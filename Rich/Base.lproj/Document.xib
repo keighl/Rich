@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
@@ -13,6 +13,7 @@
                 <outlet property="fontSizeStepper" destination="zUP-lL-Igs" id="mre-oe-PSC"/>
                 <outlet property="textAlignmentSegment" destination="9sq-i1-F3L" id="PA0-LK-zne"/>
                 <outlet property="textColorWell" destination="YLp-yo-QAK" id="VlI-So-WVn"/>
+                <outlet property="textDecorationSegment" destination="QWZ-HP-jkt" id="czD-yF-P7S"/>
                 <outlet property="textView" destination="btg-7X-Rdt" id="Jzp-h3-y9x"/>
                 <outlet property="window" destination="xOd-HO-29H" id="JIz-fz-R2o"/>
             </connections>
@@ -125,7 +126,7 @@
                                         </connections>
                                     </popUpButton>
                                     <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hWL-SA-inm" userLabel="Font Size Field">
-                                        <rect key="frame" x="78" y="309" width="40" height="22"/>
+                                        <rect key="frame" x="191" y="309" width="40" height="22"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="40" id="nJ0-UW-nyU"/>
                                         </constraints>
@@ -141,23 +142,23 @@
                                         </connections>
                                     </textField>
                                     <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="zUP-lL-Igs" userLabel="Font Size Stepper">
-                                        <rect key="frame" x="119" y="306" width="19" height="27"/>
+                                        <rect key="frame" x="232" y="306" width="19" height="27"/>
                                         <stepperCell key="cell" continuous="YES" alignment="left" minValue="1" maxValue="1000" doubleValue="12" id="xAB-c4-YDb"/>
                                         <connections>
                                             <action selector="fontSizeChanged:" target="-2" id="KIq-m2-6Ks"/>
                                         </connections>
                                     </stepper>
                                     <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="9sq-i1-F3L">
-                                        <rect key="frame" x="76" y="278" width="177" height="24"/>
+                                        <rect key="frame" x="18" y="278" width="233" height="24"/>
                                         <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="FV9-PE-ca4">
                                             <font key="font" metaFont="system"/>
                                             <segments>
-                                                <segment image="text_align_left_Template" width="42" selected="YES"/>
-                                                <segment image="text_align_center_Template" width="42" tag="2"/>
-                                                <segment toolTip="Align right" image="text_align_right_Template" width="42" tag="1">
+                                                <segment image="text_align_left_Template" width="56" selected="YES"/>
+                                                <segment image="text_align_center_Template" width="56" tag="2"/>
+                                                <segment toolTip="Align right" image="text_align_right_Template" width="56" tag="1">
                                                     <nil key="label"/>
                                                 </segment>
-                                                <segment image="text_align_justify_Template" width="42" tag="3">
+                                                <segment image="text_align_justify_Template" width="56" tag="3">
                                                     <nil key="label"/>
                                                 </segment>
                                             </segments>
@@ -166,24 +167,46 @@
                                             <action selector="paragraphAlignmentChanged:" target="-2" id="uZU-N9-KQU"/>
                                         </connections>
                                     </segmentedControl>
+                                    <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="QWZ-HP-jkt">
+                                        <rect key="frame" x="18" y="308" width="167" height="24"/>
+                                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectAny" id="WN5-85-qwC">
+                                            <font key="font" metaFont="system"/>
+                                            <segments>
+                                                <segment toolTip="Bold" image="bold_Template" width="53">
+                                                    <nil key="label"/>
+                                                </segment>
+                                                <segment toolTip="Underline" image="italic_Template" width="53" selected="YES" tag="1">
+                                                    <nil key="label"/>
+                                                </segment>
+                                                <segment toolTip="Underline" image="underline_Template" width="53" tag="2">
+                                                    <nil key="label"/>
+                                                </segment>
+                                            </segments>
+                                        </segmentedCell>
+                                        <connections>
+                                            <action selector="decorationChanged:" target="-2" id="YoC-df-ela"/>
+                                        </connections>
+                                    </segmentedControl>
                                 </subviews>
                                 <constraints>
-                                    <constraint firstItem="zUP-lL-Igs" firstAttribute="leading" secondItem="hWL-SA-inm" secondAttribute="trailing" constant="4" id="7sx-k4-SD6"/>
+                                    <constraint firstItem="9sq-i1-F3L" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="20" id="7xC-9w-XGa"/>
                                     <constraint firstAttribute="width" relation="lessThanOrEqual" constant="400" id="9Ke-bX-3cd"/>
                                     <constraint firstItem="zUP-lL-Igs" firstAttribute="leading" secondItem="hWL-SA-inm" secondAttribute="trailing" constant="4" id="KFi-WQ-4Er"/>
                                     <constraint firstItem="YLp-yo-QAK" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="20" id="Nc1-NV-kKS"/>
                                     <constraint firstItem="bex-fT-Esx" firstAttribute="top" secondItem="h7E-GJ-nrO" secondAttribute="top" constant="20" id="PR3-gA-Z0X"/>
                                     <constraint firstItem="YLp-yo-QAK" firstAttribute="top" secondItem="h7E-GJ-nrO" secondAttribute="top" constant="20" id="TCl-2z-nuA"/>
-                                    <constraint firstItem="9sq-i1-F3L" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="78" id="YPd-iF-xjf"/>
                                     <constraint firstAttribute="trailing" secondItem="bex-fT-Esx" secondAttribute="trailing" constant="20" id="Yfo-vH-6qX"/>
                                     <constraint firstAttribute="trailing" secondItem="YoJ-7b-Cjr" secondAttribute="trailing" constant="20" id="bQQ-9H-eBt"/>
-                                    <constraint firstItem="hWL-SA-inm" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="78" id="hco-RN-aOG"/>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="270" id="jfE-HH-9Ap"/>
+                                    <constraint firstItem="hWL-SA-inm" firstAttribute="leading" secondItem="QWZ-HP-jkt" secondAttribute="trailing" constant="8" id="n3j-zj-LCW"/>
                                     <constraint firstItem="zUP-lL-Igs" firstAttribute="top" secondItem="YoJ-7b-Cjr" secondAttribute="bottom" constant="10" id="pfR-Vf-yTu"/>
                                     <constraint firstItem="hWL-SA-inm" firstAttribute="top" secondItem="YoJ-7b-Cjr" secondAttribute="bottom" constant="10" id="qWX-37-80v"/>
+                                    <constraint firstAttribute="trailing" secondItem="zUP-lL-Igs" secondAttribute="trailing" constant="20" id="qZc-Ek-r5M"/>
                                     <constraint firstItem="bex-fT-Esx" firstAttribute="leading" secondItem="YLp-yo-QAK" secondAttribute="trailing" constant="8" id="tAY-1x-bfZ"/>
+                                    <constraint firstItem="QWZ-HP-jkt" firstAttribute="leading" secondItem="h7E-GJ-nrO" secondAttribute="leading" constant="20" id="tXG-s2-4g8"/>
                                     <constraint firstItem="9sq-i1-F3L" firstAttribute="top" secondItem="zUP-lL-Igs" secondAttribute="bottom" constant="8" id="vsO-J6-0Gi"/>
                                     <constraint firstItem="YoJ-7b-Cjr" firstAttribute="leading" secondItem="YLp-yo-QAK" secondAttribute="trailing" constant="8" id="x8g-9Z-4gj"/>
+                                    <constraint firstItem="QWZ-HP-jkt" firstAttribute="top" secondItem="YoJ-7b-Cjr" secondAttribute="bottom" constant="10" id="yGP-Qe-eFh"/>
                                     <constraint firstItem="YoJ-7b-Cjr" firstAttribute="top" secondItem="bex-fT-Esx" secondAttribute="bottom" constant="10" id="z6V-fV-lLH"/>
                                 </constraints>
                             </customView>
@@ -208,9 +231,12 @@
         </window>
     </objects>
     <resources>
+        <image name="bold_Template" width="8" height="10"/>
+        <image name="italic_Template" width="5" height="10"/>
         <image name="text_align_center_Template" width="14" height="10"/>
         <image name="text_align_justify_Template" width="14" height="10"/>
         <image name="text_align_left_Template" width="14" height="10"/>
         <image name="text_align_right_Template" width="14" height="10"/>
+        <image name="underline_Template" width="7" height="10"/>
     </resources>
 </document>
