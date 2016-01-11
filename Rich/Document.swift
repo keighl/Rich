@@ -18,8 +18,8 @@ class Document: NSDocument {
     
     @IBOutlet var textView: NSTextView?
     @IBOutlet var textColorWell: NSColorWell?
-    @IBOutlet var fontFamilyName: NSPopUpButton?
-    @IBOutlet var fontMember: NSPopUpButton?
+    @IBOutlet var fontFamilyButton: NSPopUpButton?
+    @IBOutlet var fontFaceButon: NSPopUpButton?
     @IBOutlet var fontSizeStepper: NSStepper?
     @IBOutlet var fontSizeField: NSTextField?
     @IBOutlet var textAlignmentSegment: NSSegmentedControl?
@@ -32,17 +32,17 @@ class Document: NSDocument {
 
     // Labels for the members menu (e.g. Bold, Oblique) in the current font family
     // assigned inside textViewDidChangeTypingAttributes
-    dynamic var fontMemberLabels: [String] = []
+    dynamic var fontFaceLabels: [String] = []
     // Postscript font names for members in the current font family
     // These values are needed to actually construct NSFont objects
     // assigned inside textViewDidChangeTypingAttributes
-    dynamic var fontMemberNames: [String] = []
+    dynamic var fontFaceNames: [String] = []
     
     // Attributes for the textview extracted from the actual typingAttributes
     // textView.typingAttributes info can't be bound directly since sometimes it's missing.
     // Looking at you, NSParagraphStyleAttributeName...
     dynamic var currentFontFamilyName: String? = ""
-    dynamic var currentFontMemberLabel: String? = ""
+    dynamic var currentFontFace: String? = ""
     dynamic var currentFontSize: CGFloat = 0
     dynamic var currentTextColor = NSColor.blackColor()
     dynamic var currentTextAlignment = NSTextAlignment.Left
@@ -85,15 +85,18 @@ class Document: NSDocument {
         textColorWell!.bind("value", toObject: self, withKeyPath: "currentTextColor", options: nil)
         
         // font family
-        fontFamilyName!.bind("content", toObject: self, withKeyPath: "fontFamilyNames", options: opts)
-        fontFamilyName!.bind("selectedValue", toObject: self, withKeyPath: "currentFontFamilyName", options: nil)
+        fontFamilyButton!.bind("content", toObject: self, withKeyPath: "fontFamilyNames", options: opts)
+        fontFamilyButton!.bind("selectedValue", toObject: self, withKeyPath: "currentFontFamilyName", options: nil)
 
         // font member
-        fontMember!.bind("content", toObject: self, withKeyPath: "fontMemberLabels", options: opts)
-        fontMember!.bind("selectedValue", toObject: self, withKeyPath: "currentFontMemberLabel", options: nil)
+        fontFaceButon!.bind("content", toObject: self, withKeyPath: "fontFaceLabels", options: opts)
+        fontFaceButon!.bind("selectedValue", toObject: self, withKeyPath: "currentFontFace", options: nil)
         
         // size
-        fontSizeField!.bind("value", toObject: self, withKeyPath: "currentFontSize", options: opts)
+        fontSizeField!.bind("value",
+            toObject: self,
+            withKeyPath: "currentFontSize",
+            options: opts)
         fontSizeStepper!.bind("value", toObject: self, withKeyPath: "currentFontSize", options: nil)
         
         // alignment
@@ -123,8 +126,11 @@ class Document: NSDocument {
         contentString = NSAttributedString(RTF: data, documentAttributes: nil)!
     }
     
+    
+    // MARK: Font management
+
     @IBAction func fontFamilyChanged(sender: NSPopUpButton) {
-        let newIDX = fontFamilyName!.indexOfSelectedItem
+        let newIDX = sender.indexOfSelectedItem
         if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
             let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toFamily: fontFamilyNames[newIDX])
             applyNewAttributes([NSFontAttributeName: newFont])
@@ -133,14 +139,12 @@ class Document: NSDocument {
         }
     }
     
-    // MARK: Font management
-    
-    @IBAction func fontMemberChanged(sender: NSPopUpButton) {
-        let newIDX = fontMember!.indexOfSelectedItem
+    @IBAction func fontFaceChanged(sender: NSPopUpButton) {
+        let newIDX = sender.indexOfSelectedItem
         if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
-            let newMemberName = fontMemberNames[newIDX]
+            let newFaceName = fontFaceNames[newIDX]
             
-            if let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toFace: newMemberName) {
+            if let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toFace: newFaceName) {
                 applyNewAttributes([NSFontAttributeName: newFont])
             } else {
                 // TODO
@@ -157,9 +161,9 @@ class Document: NSDocument {
             newSize *= -1.0
         }
         
-        if let currentFont = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
-            let newFont = NSFontManager.sharedFontManager().convertFont(currentFont, toSize: newSize)
-            applyNewAttributes([NSFontAttributeName: newFont])
+        if var font = textView?.typingAttributes[NSFontAttributeName] as? NSFont {
+            font = NSFontManager.sharedFontManager().convertFont(font, toSize: newSize)
+            applyNewAttributes([NSFontAttributeName: font])
         } else {
             // TODO
         }
@@ -211,8 +215,7 @@ class Document: NSDocument {
                     paragraphStyle = existingPStyle.mutableCopy() as! NSMutableParagraphStyle
                 }
                 paragraphStyle.alignment = alignment
-                typingAttributes[NSParagraphStyleAttributeName] = paragraphStyle
-                textView?.typingAttributes = typingAttributes
+                applyNewAttributes([NSParagraphStyleAttributeName: paragraphStyle])
             }
         }
     }
@@ -288,6 +291,7 @@ class Document: NSDocument {
 
 extension Document: NSTextViewDelegate {
     
+    // Monitor changes in typing attributes to update bound control values
     func textViewDidChangeTypingAttributes(notification: NSNotification) {
 
         // Sniff the typing color
@@ -306,7 +310,6 @@ extension Document: NSTextViewDelegate {
         
         // Sniff the typing underline style
         if let underlineStyle = textView?.typingAttributes[NSUnderlineStyleAttributeName] as? Int {
-            debugPrint("currentTextIsUnderline", underlineStyle, NSUnderlineStyle.StyleSingle.rawValue)
             currentTextIsUnderline = (underlineStyle == NSUnderlineStyle.StyleSingle.rawValue)
         } else {
             currentTextIsUnderline = false
@@ -323,15 +326,15 @@ extension Document: NSTextViewDelegate {
             if let members = NSFontManager.sharedFontManager().availableMembersOfFontFamily(currentFontFamilyName!) {
                 // e.g [[Helvetica, Regular, 5, 0], [Helvetica-Light, Light, 3, 0], [Helvetica-Oblique, Oblique, 5, 1], [Helvetica-LightOblique, Light Oblique, 3, 1], [Helvetica-Bold, Bold, 9, 2], [Helvetica-BoldOblique, Bold Oblique, 9, 3]]
                 // https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSFontManager_Class/#//apple_ref/occ/instm/NSFontManager/availableMembersOfFontFamily:
-                fontMemberNames = members.map({member in (member[0] as! String)})
-                fontMemberLabels = members.map({member in (member[1] as! String)})
+                fontFaceNames = members.map({member in (member[0] as! String)})
+                fontFaceLabels = members.map({member in (member[1] as! String)})
                 if let matchedMember = members.filter({ member in
                     if let memberFontName = member[0] as? String {
                         return memberFontName == font.fontName
                     }
                     return false
                 }).first {
-                    currentFontMemberLabel = matchedMember[1] as? String
+                    currentFontFace = matchedMember[1] as? String
                 } else {
                     // TODO handle missing font
                 }

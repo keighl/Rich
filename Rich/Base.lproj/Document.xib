@@ -7,8 +7,8 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="Document" customModule="Rich" customModuleProvider="target">
             <connections>
-                <outlet property="fontFamilyName" destination="bex-fT-Esx" id="3D3-Mf-pVj"/>
-                <outlet property="fontMember" destination="YoJ-7b-Cjr" id="uTp-nf-wC4"/>
+                <outlet property="fontFaceButon" destination="YoJ-7b-Cjr" id="FQb-8Z-jAv"/>
+                <outlet property="fontFamilyButton" destination="bex-fT-Esx" id="6B8-z0-P6l"/>
                 <outlet property="fontSizeField" destination="hWL-SA-inm" id="aQF-IY-Xjd"/>
                 <outlet property="fontSizeStepper" destination="zUP-lL-Igs" id="mre-oe-PSC"/>
                 <outlet property="textAlignmentSegment" destination="9sq-i1-F3L" id="PA0-LK-zne"/>
@@ -121,7 +121,7 @@
                                             </menu>
                                         </popUpButtonCell>
                                         <connections>
-                                            <action selector="fontMemberChanged:" target="-2" id="JLL-4u-hKx"/>
+                                            <action selector="fontFaceChanged:" target="-2" id="OO4-T4-gTk"/>
                                             <outlet property="nextKeyView" destination="hWL-SA-inm" id="a9i-fW-X5h"/>
                                         </connections>
                                     </popUpButton>
